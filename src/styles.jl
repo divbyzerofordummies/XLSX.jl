@@ -235,7 +235,7 @@ styles_is_float(ws::Worksheet, index) = styles_is_float(get_workbook(ws), index)
 #=
 Cell Xf element follows the XML format below.
 This function queries the 0-based index of the first xf element that has the provided numFmtId.
-Returns -1 if not found.
+Returns [`EmptyCellDataFormat`](@ref) if not found.
 
 ```
 <styleSheet ...
@@ -248,23 +248,20 @@ Returns -1 if not found.
 =#
 function styles_get_cellXf_with_numFmtId(wb::Workbook, numFmtId::Int) :: AbstractCellDataFormat
     xroot = styles_xmlroot(wb)
-    elements_found = findall("/xpath:styleSheet/xpath:cellXfs/xpath:xf", xroot, SPREADSHEET_NAMESPACE_XPATH_ARG)
 
-    if isempty(elements_found)
-        return EmptyCellDataFormat()
-    else
-        for i in 1:length(elements_found)
-            el = elements_found[i]
-            if haskey(el, "numFmtId")
-                if parse(Int, el["numFmtId"]) == numFmtId
-                    return CellDataFormat(i-1)
-                end
+    elements_found = findall("/xpath:styleSheet/xpath:cellXfs/xpath:xf", xroot, SPREADSHEET_NAMESPACE_XPATH_ARG)
+    isempty(elements_found) && return EmptyCellDataFormat()
+
+    for (i, el) in enumerate(elements_found)
+        if haskey(el, "numFmtId")
+            if parse(Int, el["numFmtId"]) == numFmtId
+                return CellDataFormat(i-1) # XML counting is 0-based
             end
         end
-
-        # not found
-        return EmptyCellDataFormat()
     end
+
+    # not found
+    return EmptyCellDataFormat()
 end
 
 function styles_add_cell_xf(wb::Workbook, attributes::Dict{String, String}) :: CellDataFormat
