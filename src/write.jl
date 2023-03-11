@@ -247,7 +247,7 @@ Use [`update_value!`](@ref) to preserve everything except for the value of the c
 """
 function setdata!(ws::Worksheet, cell::Cell)
     @assert is_writable(get_xlsxfile(ws)) "XLSXFile instance is not writable."
-    @assert !snothing(ws.cache) "Can't write data to a Worksheet with empty cache."
+    @assert !isnothing(ws.cache) "Can't write data to a Worksheet with empty cache."
     cache = ws.cache
 
     r = row_number(cell)
