@@ -319,10 +319,10 @@ setdata!(ws::Worksheet, ref::CellRef, ::Nothing) = setdata!(ws, ref, CellValue(w
 setdata!(ws::Worksheet, row::Integer, col::Integer, val::CellValue) = setdata!(ws, CellRef(row, col), val)
 
 Base.setindex!(ws::Worksheet, v, ref) = setdata!(ws, ref, v)
-Base.setindex!(ws::Worksheet, v, r, c) = setdata!(ws, r, c, v)
+Base.setindex!(ws::Worksheet, v, row, col) = setdata!(ws, CellRef(row, col), v)
 
 Base.setindex!(ws::Worksheet, v::AbstractVector, ref; dim::Integer=2) = setdata!(ws, ref, v, dim)
-Base.setindex!(ws::Worksheet, v::AbstractVector, r, c; dim::Integer=2) = setdata!(ws, r, c, v, dim)
+Base.setindex!(ws::Worksheet, v::AbstractVector, row, col; dim::Integer=2) = setdata!(ws, CellRef(row, col), v, dim)
 
 setdata!(ws::Worksheet, ref::CellRef, val::CellValueType) = setdata!(ws, ref, CellValue(ws, val))
 setdata!(ws::Worksheet, ref_str::AbstractString, value) = setdata!(ws, CellRef(ref_str), value)
