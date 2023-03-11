@@ -343,6 +343,17 @@ function parse_workbook!(xf::XLSXFile)
         end
     end
 
+    # Set re-calculation to "Automatic" so that if we save the document again, all calculations are performed with the updated values
+    # https://stackoverflow.com/questions/18355691/set-xlsx-to-recalculate-formulae-on-open
+    # TODO: Only do this if there were some changes to the data
+    calcpr_node = EzXML.findfirst("/xpath:workbook/xpath:calcPr", xroot, SPREADSHEET_NAMESPACE_XPATH_ARG)
+    if isnothing(calcpr_node)
+        workbook_node = EzXML.findfirst("/xpath:workbook", xroot, SPREADSHEET_NAMESPACE_XPATH_ARG)
+        calcpr_node = EzXML.addelement!(workbook_node, "calcPr")
+    end
+    calcpr_node["fullCalcOnLoad"] = "1"
+    # calcpr_node["calcMode"] = "auto" # this does not work, does not re-calculate, still has to press Ctrl+Alt+Shift+F9
+
     # sheets
     sheets = Vector{Worksheet}()
     for node in EzXML.eachelement(xroot)
