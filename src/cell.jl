@@ -24,7 +24,7 @@ function find_t_node_recursively(n::EzXML.Node) :: Union{Nothing, EzXML.Node}
     else
         for child in EzXML.eachelement(n)
             result = find_t_node_recursively(child)
-            if result != nothing
+            if !isnothing(result)
                 return result
             end
         end
@@ -68,7 +68,7 @@ function Cell(c::EzXML.Node)
 
             if EzXML.nodename(c_child_element) == "is"
                 t_node = find_t_node_recursively(c_child_element)
-                if t_node != nothing
+                if !isnothing(t_node)
                     v = EzXML.nodecontent(t_node)
                 end
             end

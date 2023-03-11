@@ -155,7 +155,7 @@ function update_worksheets_xml!(xl::XLSXFile)
 
         local spans_str::String = ""
 
-        if get_dimension(sheet) != nothing
+        if !isnothing(get_dimension(sheet))
             spans_str = string(column_number(get_dimension(sheet).start), ":", column_number(get_dimension(sheet).stop))
         end
 
@@ -198,7 +198,7 @@ function update_worksheets_xml!(xl::XLSXFile)
         end
 
         # updates worksheet dimension
-        if get_dimension(sheet) != nothing
+        if !isnothing(get_dimension(sheet))
             dimension_node = EzXML.findfirst("/xpath:worksheet/xpath:dimension", EzXML.root(doc_copy), SPREADSHEET_NAMESPACE_XPATH_ARG)
             dimension_node["ref"] = string(get_dimension(sheet))
         end
@@ -213,7 +213,7 @@ function add_cell_to_worksheet_dimension!(ws::Worksheet, cell::Cell)
     # update worksheet dimension
     ws_dimension = get_dimension(ws)
 
-    if ws_dimension == nothing
+    if isnothing(ws_dimension)
         set_dimension!(ws, CellRange(cell.ref, cell.ref))
         return
     end
@@ -242,7 +242,7 @@ end
 
 function setdata!(ws::Worksheet, cell::Cell)
     @assert is_writable(get_xlsxfile(ws)) "XLSXFile instance is not writable."
-    @assert ws.cache != nothing "Can't write data to a Worksheet with empty cache."
+    @assert !snothing(ws.cache) "Can't write data to a Worksheet with empty cache."
     cache = ws.cache
 
     r = row_number(cell)

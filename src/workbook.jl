@@ -78,7 +78,7 @@ function Base.show(io::IO, xf::XLSXFile)
             sheetname = sheetname[collect(eachindex(s.name))[1:20]] * "…"
         end
 
-        if s.dimension != nothing
+        if !isnothing(s.dimension)
             rg = s.dimension
             _size = size(rg) |> x -> string(x[1], "x", x[2])
             @printf(io, "%21s %-13s %-13s\n", sheetname, _size, rg)

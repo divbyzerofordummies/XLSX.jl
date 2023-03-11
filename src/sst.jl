@@ -23,17 +23,14 @@ end
 
 function add_shared_string!(sst::SharedStringTable, str_unformatted::AbstractString, str_formatted::AbstractString) :: Int
     i = get_shared_string_index(sst, str_formatted)
-    if i != nothing
-        # it's already in the table
-        return i
-    else
-        push!(sst.unformatted_strings, str_unformatted)
-        push!(sst.formatted_strings, str_formatted)
-        sst.index[str_formatted] = length(sst.formatted_strings)
-        new_index = length(sst.formatted_strings) - 1 # 0-based
-        @assert new_index == get_shared_string_index(sst, str_formatted) "Inconsistent state after adding a string to the Shared String Table."
-        return new_index
-    end
+    isnothing(i) || return i # it's already in the table
+        
+    push!(sst.unformatted_strings, str_unformatted)
+    push!(sst.formatted_strings, str_formatted)
+    sst.index[str_formatted] = length(sst.formatted_strings)
+    new_index = length(sst.formatted_strings) - 1 # 0-based
+    @assert new_index == get_shared_string_index(sst, str_formatted) "Inconsistent state after adding a string to the Shared String Table."
+    return new_index
 end
 
 # Adds a string to shared string table. Returns the 0-based index of the shared string in the shared string table.

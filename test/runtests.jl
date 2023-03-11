@@ -676,7 +676,7 @@ function check_test_data(data::Vector{S}, test_data::Vector{T}) where {S, T}
         test_value = test_data[col][row]
         value = data[col][row]
 
-        if test_value === nothing
+        if isnothing(test_value)
             @test ismissing(value)
         elseif ismissing(test_value) || ( isa(test_value, AbstractString) && isempty(test_value) )
             @test ismissing(value) || ( isa(value, AbstractString) && isempty(value) )

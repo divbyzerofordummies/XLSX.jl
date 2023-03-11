@@ -20,7 +20,7 @@ function read_worksheet_dimension(xf::XLSXFile, relationship_id, name) :: Union{
 
     try
         # read Worksheet dimension
-        while EzXML.iterate(reader) != nothing
+        while !isnothing(EzXML.iterate(reader))
             if EzXML.nodetype(reader) == EzXML.READER_ELEMENT && EzXML.nodename(reader) == "dimension"
                 @assert EzXML.nodedepth(reader) == 1 "Malformed Worksheet \"$(ws.name)\": unexpected node depth for dimension node: $(EzXML.nodedepth(reader))."
                 ref_str = reader["ref"]
@@ -166,11 +166,8 @@ end
 getdata(ws::Worksheet, rng::SheetCellRange) = getdata(get_xlsxfile(ws), rng)
 
 function getdata(ws::Worksheet)
-    if ws.dimension != nothing
-        return getdata(ws, get_dimension(ws))
-    else
-        error("Worksheet dimension is unknown.")
-    end
+    isnothing(ws.dimension) && error("Worksheet dimension is unknown.")
+    return getdata(ws, get_dimension(ws))
 end
 
 Base.getindex(ws::Worksheet, r) = getdata(ws, r)
@@ -179,7 +176,7 @@ Base.getindex(ws::Worksheet, ::Colon) = getdata(ws)
 
 function Base.show(io::IO, ws::Worksheet)
     hidden_string = ws.is_hidden ? "(hidden)" : ""
-    if get_dimension(ws) != nothing
+    if !isnothing(get_dimension(ws))
         rg = get_dimension(ws)
         nrow, ncol = size(rg)
         @printf(io, "%d×%d %s: [\"%s\"](%s) %s", nrow, ncol, typeof(ws), ws.name, rg, hidden_string)

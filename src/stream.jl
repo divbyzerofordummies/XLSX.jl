@@ -9,7 +9,7 @@ end
 is translated into:
 
 next = iterate(iter)
-while next != nothing
+while !isnothing(next)
     (i, state) = next
     # body
     next = iterate(iter, state)
@@ -74,14 +74,14 @@ function Base.iterate(itr::SheetRowStreamIterator, state::Union{Nothing, SheetRo
 
     ws = get_worksheet(itr)
 
-    if state == nothing # first iteration. Will open a stream and create the first state instance
+    if isnothing(state) # first iteration. Will open a stream and create the first state instance
         state = let
             target_file = get_relationship_target_by_id("xl", get_workbook(ws), ws.relationship_id)
             zip_io, reader = open_internal_file_stream(get_xlsxfile(ws), target_file)
 
             # The reader will be positioned in the first row element inside sheetData
             # First, let's look for sheetData opening element
-            while EzXML.iterate(reader) != nothing
+            while !isnothing(EzXML.iterate(reader))
                 if EzXML.nodetype(reader) == EzXML.READER_ELEMENT && EzXML.nodename(reader) == "sheetData"
                     @assert EzXML.nodedepth(reader) == 1 "Malformed Worksheet \"$(ws.name)\": unexpected node depth for sheetData node: $(EzXML.nodedepth(reader))."
                     break
@@ -91,7 +91,7 @@ function Base.iterate(itr::SheetRowStreamIterator, state::Union{Nothing, SheetRo
             @assert EzXML.nodename(reader) == "sheetData" "Malformed Worksheet \"$(ws.name)\": Couldn't find sheetData element."
 
             # Now let's look for a row element, if it exists
-            while EzXML.iterate(reader) != nothing # go next node
+            while !isnothing(EzXML.iterate(reader)) # go next node
                 if EzXML.nodetype(reader) == EzXML.READER_ELEMENT && EzXML.nodename(reader) == "row"
                     break
                 elseif is_end_of_sheet_data(reader)
@@ -108,7 +108,7 @@ function Base.iterate(itr::SheetRowStreamIterator, state::Union{Nothing, SheetRo
     end
 
     # given that the first iteration case is done in the code above, we shouldn't get it again in here
-    @assert state != nothing "Error processing Worksheet $(ws.name): shouldn't get first iteration case again."
+    @assert !isnothing(state) "Error processing Worksheet $(ws.name): shouldn't get first iteration case again."
 
     reader = state.xml_stream_reader
     if is_end_of_sheet_data(reader)
@@ -125,7 +125,7 @@ function Base.iterate(itr::SheetRowStreamIterator, state::Union{Nothing, SheetRo
     rowcells = Dict{Int, Cell}() # column -> cell
 
     # iterate thru row cells
-    while EzXML.iterate(reader) != nothing
+    while !isnothing(EzXML.iterate(reader))
 
         if is_end_of_sheet_data(reader)
             close(state)
@@ -143,7 +143,7 @@ function Base.iterate(itr::SheetRowStreamIterator, state::Union{Nothing, SheetRo
                     break
                 end
 
-                @assert EzXML.iterate(reader) != nothing
+                @assert !isnothing(EzXML.iterate(reader))
             end
 
 
@@ -236,9 +236,7 @@ function Base.iterate(ws_cache::WorksheetCache, row_from_last_iteration::Int=0)
     else
 
         next = iterate(ws_cache.stream_iterator, ws_cache.stream_state)
-        if next == nothing
-            return nothing
-        end
+        isnothing(next) && return nothing
 
         sheet_row, next_stream_state = next
 
@@ -310,7 +308,7 @@ end
 """
 function eachrow(ws::Worksheet) :: SheetRowIterator
     if is_cache_enabled(ws)
-        if ws.cache == nothing
+        if isnothing(ws.cache)
             ws.cache = WorksheetCache(ws)
         end
         return ws.cache

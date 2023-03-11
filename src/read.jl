@@ -378,9 +378,9 @@ function parse_workbook!(xf::XLSXFile)
                     if isempty(defined_value)
                         defined_value = missing
                     end
-                elseif tryparse(Int, defined_value_string) != nothing
+                elseif tryparse(Int, defined_value_string) !== nothing
                     defined_value = parse(Int, defined_value_string)
-                elseif tryparse(Float64, defined_value_string) != nothing
+                elseif tryparse(Float64, defined_value_string) !== nothing
                     defined_value = parse(Float64, defined_value_string)
                 elseif isempty(defined_value_string)
                     defined_value = missing
@@ -467,7 +467,7 @@ function Base.close(xl::XLSXFile)
 
     # close all internal file streams from worksheet caches
     for sheet in xl.workbook.sheets
-        if sheet.cache != nothing && sheet.cache.stream_state != nothing
+        if !isnothing(sheet.cache) && !isnothing(sheet.cache.stream_state)
             close(sheet.cache.stream_state)
         end
     end
