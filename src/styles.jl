@@ -54,7 +54,7 @@ end
 
 # get styles document for workbook
 function styles_xmlroot(workbook::Workbook)
-    if workbook.styles_xroot == nothing
+    if isnothing(workbook.styles_xroot)
         STYLES_RELATIONSHIP_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"
         if has_relationship_by_type(workbook, STYLES_RELATIONSHIP_TYPE)
             styles_target = get_relationship_target_by_type("xl", workbook, STYLES_RELATIONSHIP_TYPE)
