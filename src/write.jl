@@ -240,6 +240,11 @@ function add_cell_to_worksheet_dimension!(ws::Worksheet, cell::Cell)
     nothing
 end
 
+"""
+    setdata!(ws::Worksheet, cell::Cell)
+Replaces the data in the cell cache with the information given in `cell`.
+Use [`update_value!`](@ref) to preserve everything except for the value of the cell.
+"""
 function setdata!(ws::Worksheet, cell::Cell)
     @assert is_writable(get_xlsxfile(ws)) "XLSXFile instance is not writable."
     @assert !snothing(ws.cache) "Can't write data to a Worksheet with empty cache."
@@ -256,6 +261,50 @@ function setdata!(ws::Worksheet, cell::Cell)
     cache.cells[r][c] = cell
     add_cell_to_worksheet_dimension!(ws, cell)
 
+    nothing
+end
+
+"""
+    setdata!(ws::Worksheet, ref::CellRef, val::CellValueType)
+Sets the data of a cell without any further information on formulae etc.
+If the cell already exists, only updates the value of the cell provided it has the same type.
+Otherwise, applies the new type and changes to default formatting.
+"""
+function setdata!(ws::Worksheet, ref::CellRef, val::CellValueType)
+    @assert is_writable(get_xlsxfile(ws)) "XLSXFile instance is not writable."
+    @assert !isnothing(ws.cache) "Can't write data to a Worksheet with empty cache."
+    cache = ws.cache
+
+    r = row_number(ref)
+    c = column_number(ref)
+
+    is_new_cell = false
+    if !haskey(cache.cells, r)
+        is_new_cell = true
+        push!(cache.rows_in_cache, r)
+        cache.cells[r] = Dict{Int, Cell}()
+        cache.dirty = true
+    end
+    is_new_cell |= !haskey(cache.cells[r], c)
+
+    if is_new_cell
+        cell = Cell(ws, ref, val)
+        cache.cells[r][c] = cell
+        add_cell_to_worksheet_dimension!(ws, cell)
+    else
+        # Check whether the data type is the same; if not, overwrite the old cell
+        old_cell = cache.cells[r][c]
+        t, v = xlsx_encode(ws, val)
+        if (old_cell.datatype == t) # same type --> leave everything as it is.
+            old_cell.value = v
+            old_cell.formula = "" # Or the new value would be immediately replaced
+        else
+            # No simple replacement is possible.
+            # TODO: What about formatting like background or font color?
+            cell = Cell(ws, ref, val)
+            cache.cells[r][c] = cell
+        end
+    end
     nothing
 end
 
@@ -308,13 +357,12 @@ function setdata!(ws::Worksheet, ref::CellRef, val::CellValue)
 end
 
 # convert AbstractTypes to concrete
-setdata!(ws::Worksheet, ref::CellRef, val::AbstractString) = setdata!(ws, ref, CellValue(ws, convert(String, val)))
-setdata!(ws::Worksheet, ref::CellRef, val::Bool) = setdata!(ws, ref, CellValue(ws, val))
-setdata!(ws::Worksheet, ref::CellRef, val::Integer) = setdata!(ws, ref, CellValue(ws, convert(Int, val)))
-setdata!(ws::Worksheet, ref::CellRef, val::Real) = setdata!(ws, ref, CellValue(ws, convert(Float64, val)))
+setdata!(ws::Worksheet, ref::CellRef, val::AbstractString) = setdata!(ws, ref, convert(String, val))
+setdata!(ws::Worksheet, ref::CellRef, val::Integer) = setdata!(ws, ref, convert(Int, val))
+setdata!(ws::Worksheet, ref::CellRef, val::Real) = setdata!(ws, ref, convert(Float64, val))
 
 # convert nothing to missing when writing
-setdata!(ws::Worksheet, ref::CellRef, ::Nothing) = setdata!(ws, ref, CellValue(ws, missing))
+setdata!(ws::Worksheet, ref::CellRef, ::Nothing) = setdata!(ws, ref, missing)
 
 setdata!(ws::Worksheet, row::Integer, col::Integer, val::CellValue) = setdata!(ws, CellRef(row, col), val)
 
@@ -324,7 +372,6 @@ Base.setindex!(ws::Worksheet, v, row, col) = setdata!(ws, CellRef(row, col), v)
 Base.setindex!(ws::Worksheet, v::AbstractVector, ref; dim::Integer=2) = setdata!(ws, ref, v, dim)
 Base.setindex!(ws::Worksheet, v::AbstractVector, row, col; dim::Integer=2) = setdata!(ws, CellRef(row, col), v, dim)
 
-setdata!(ws::Worksheet, ref::CellRef, val::CellValueType) = setdata!(ws, ref, CellValue(ws, val))
 setdata!(ws::Worksheet, ref_str::AbstractString, value) = setdata!(ws, CellRef(ref_str), value)
 setdata!(ws::Worksheet, ref_str::AbstractString, value::Vector, dim::Integer) = setdata!(ws, CellRef(ref_str), value, dim)
 setdata!(ws::Worksheet, row::Integer, col::Integer, data) = setdata!(ws, CellRef(row, col), data)

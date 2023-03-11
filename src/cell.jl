@@ -33,6 +33,17 @@ function find_t_node_recursively(n::EzXML.Node) :: Union{Nothing, EzXML.Node}
     return nothing
 end
 
+"""
+    Cell(ws::Worksheet, ref::CellRef, val::CellValueType)
+Create a default [`Cell`](@ref) for the given value type.
+No formula is added, the standard style for the type is applied.
+"""
+function Cell(ws::Worksheet, ref::CellRef, val::CellValueType)
+    styleid = default_cell_format(ws, val)
+    t, v = xlsx_encode(ws, val)
+    return Cell(ref, t, id(styleid), v, "")
+end
+
 function Cell(c::EzXML.Node)
     # c (Cell) element is defined at section 18.3.1.4
     # t (Cell Data Type) is an enumeration representing the cell's data type. The possible values for this attribute are defined by the ST_CellType simple type (§18.18.11).
