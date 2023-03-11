@@ -141,6 +141,11 @@ function addNode!(node, f::ReferencedFormula)
     f_node["ref"] = f.ref
     EzXML.setnodecontent!(f_node, f.formula)
 end
+
+"""
+    update_worksheets_xml!(xl::XLSXFile)
+Update the XML files based on content in the cache that was possibly updated by write commands.
+"""
 function update_worksheets_xml!(xl::XLSXFile)
     buff = IOBuffer()
 

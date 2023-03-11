@@ -4,7 +4,7 @@ struct CellPosition
     column::Int
 end
 
-#=
+"""
 A `CellRef` represents a cell location given by row and column identifiers.
 
 `CellRef("A6")` indicates a cell located at column `1` and row `6`.
@@ -26,7 +26,7 @@ println( XLSX.row_number(cn) ) # will print 1
 println( XLSX.column_number(cn) ) # will print 28
 println( string(cn) ) # will print out AB1
 ```
-=#
+"""
 struct CellRef
     name::String
     row_number::Int
